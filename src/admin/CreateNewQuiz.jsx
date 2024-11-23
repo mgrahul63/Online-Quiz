@@ -82,7 +82,8 @@ const CreateNewQuiz = () => {
 
         if (response.status === 201) {
           const result = response?.data?.data;
-          navigate("create-questions", { state: { result } });
+          navigate("create-questions", { state: { quizSetId: result?.id } });
+
           dispatch({ type: Actions.ADD_QUIZ, payload: result });
           // console.log(result);
         }

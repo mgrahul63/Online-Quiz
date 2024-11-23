@@ -9,11 +9,10 @@ const QuizSet = () => {
   const { state } = location;
   const quizSetID = state?.quizSetId;
 
-  //   console.log(questionList);
+ 
   const handleClickEdit = (id) => {
     // console.log(id);
-  };
-  // console.log(questionList)
+  }; 
   return (
     <main className="md:flex-grow px-4 sm:px-6 lg:px-8 py-8">
       <div>
@@ -46,7 +45,7 @@ const QuizSet = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 md:gap-8 lg:gap-12">
           {/* Left Column */}
-          <CreateQuestions id={quizSetID} />
+          <CreateQuestions quizId={quizSetID} />
 
           {/* <!-- Right Column --> */}
           <QuestionsList id={quizSetID} />

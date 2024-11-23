@@ -6,7 +6,7 @@ import useAxios from "../hooks/useAxios";
 import { Actions } from "./actions";
 import { useQuizContext } from "./contexts";
 
-const CreateQuestions = ({ id: quizId }) => {
+const CreateQuestions = ({ quizId }) => {
   const { api } = useAxios();
   const { state, dispatch } = useQuizContext();
 
@@ -153,7 +153,7 @@ const CreateQuestions = ({ id: quizId }) => {
       }
     }
   };
-
+ 
   return (
     <div className="">
       <h2 className="text-3xl font-bold mb-4">{title}</h2>

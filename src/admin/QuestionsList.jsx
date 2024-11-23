@@ -19,7 +19,7 @@ const QuestionsList = ({ id }) => {
     <div className="px-4">
       <div className="rounded-lg overflow-hidden shadow-sm mb-4">
         <div className="bg-white p-6 !pb-2">
-          {questionList &&
+          {questionList ? (
             questionList?.map((question, questionIndex) => {
               return (
                 <Question
@@ -28,7 +28,10 @@ const QuestionsList = ({ id }) => {
                   questionIndex={questionIndex}
                 />
               );
-            })}
+            })
+          ) : (
+            <p>Empty Questions List...</p>
+          )}
         </div>
       </div>
     </div>

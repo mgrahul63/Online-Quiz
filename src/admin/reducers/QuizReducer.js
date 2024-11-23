@@ -29,25 +29,29 @@ const QuizReducer = (state, action) => {
       };
     }
 
-    case Actions.ADD_QUIZ:
+    case Actions.ADD_QUIZ: {
+      const result = action.payload;
+      console.log(result);
       return {
         ...state,
-        quizzes: [...state.quizzes, { ...action.payload }],
+        quizzes: [...state.quizzes, action.payload],
         loading: false,
         error: null,
         editQuestion: null,
       };
-
+    }
     // add new quiz item to the list
     case Actions.ADD_QUESTION: {
       const quizId = action.payload?.quizId;
       const newQuestion = action.payload?.newQuestion;
 
-      const updatedQuizzes = state.quizzes.map((quiz) => {
+      console.log(quizId);
+      console.log(newQuestion);
+      const updatedQuizzes = state.quizzes?.map((quiz) => {
         if (quiz.id === quizId) {
           return {
             ...quiz,
-            Questions: [...quiz.Questions, newQuestion],
+            Questions: [...(quiz?.Questions || []), newQuestion],
           };
         }
         return quiz;
