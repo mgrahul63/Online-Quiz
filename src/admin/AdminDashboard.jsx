@@ -1,128 +1,10 @@
-/* eslint-disable no-unused-vars */
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import ToastSucces from "../components/ToastMessage";
-import { useAuth } from "../hooks/useAuth";
-import useAxios from "../hooks/useAxios";
+import { Link } from "react-router-dom";
+import { useQuizContext } from "./contexts";
 import QuizCard from "./QuizCard";
-import ToastMessage from "../components/ToastMessage";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const { auth } = useAuth();
-  const { api } = useAxios();
-  const [quizList, setQuizList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchQuiz = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await api.get(
-          `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes`
-        );
-
-        if (isMounted) {
-          setQuizList(response.data);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || "Failed to fetch quizzes");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchQuiz();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [api]);
-
-  const handleClick = (result) => {
-    navigate("create-quiz/create-questions", { state: { result } });
-  };
-
-  //quiz set delete
-  const handleDeleteQuiz = async (e, quizId) => {
-    e.stopPropagation();
-
-    try {
-      const response = await api.delete(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizId}`
-      );
-      if (response.data?.status === "success") {
-        // console.log(response.data?.status);
-        const updateQuizList = quizList.filter((quiz) => quiz.id !== quizId);
-        setQuizList(updateQuizList); 
-        ToastMessage({ type: "success", message: "Quiz Delete done!" }); 
-
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  //quiz set edit
-  const handleEditQuiz = (quizId) => {
-    const updateQuizList = quizList.find((quiz) => quiz.id === quizId);
-    navigate("create-quiz", { state: { updateQuizList } });
-  };
-
-  //quiz set publish
-  const handleQuizPublished = async (quizSetId) => {
-    // console.log(quizSetId);
-    const publishQuiz = quizList.find((quiz) => quiz.id === quizSetId);
-    const updatePublishQuize = {
-      ...publishQuiz,
-      status: "published",
-    };
-
-    try {
-      const response = await api.patch(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizSetId}`,
-        updatePublishQuize
-      );
-
-      if (response.data?.status === "success") { 
-        ToastMessage({ type: "success",  message: "Quiz Published done!"}); 
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  //quiz set draft
-  const handleQuizDraft = async (quizSetId) => {
-    // console.log(quizSetId);
-    const publishQuiz = quizList.find((quiz) => quiz.id === quizSetId);
-    const updatePublishQuize = {
-      ...publishQuiz,
-      status: "draft",
-    };
-
-    try {
-      const response = await api.patch(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizSetId}`,
-        updatePublishQuize
-      );
-      if (response.data?.status === "success") {
-        ToastMessage({ type: "success", message: "Quiz draft" }); 
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  // console.log(quizList);
+  const { state } = useQuizContext();
+  const { quizzes, loading, error } = state || {};
 
   return (
     <>
@@ -167,19 +49,9 @@ const AdminDashboard = () => {
                 </div>
               </Link>
 
-              {quizList &&
-                quizList?.map((quizSet, index) => {
-                  return (
-                    <QuizCard
-                      key={index}
-                      quizSet={quizSet}
-                      handleClick={handleClick}
-                      handleDeleteQuiz={handleDeleteQuiz}
-                      handleQuizDraft={handleQuizDraft}
-                      handleQuizPublished={handleQuizPublished}
-                      handleEditQuiz={handleEditQuiz}
-                    />
-                  );
+              {quizzes &&
+                quizzes?.map((quizSet, index) => {
+                  return <QuizCard key={index} quizSet={quizSet} />;
                 })}
             </div>
           </main>

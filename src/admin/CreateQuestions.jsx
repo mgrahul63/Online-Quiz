@@ -1,13 +1,17 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 
-import { useState } from "react";
-import ToastSucces from "../components/ToastMessage";
-import useAxios from "../hooks/useAxios";
+import { useEffect, useState } from "react";
 import ToastMessage from "../components/ToastMessage";
+import useAxios from "../hooks/useAxios";
+import { Actions } from "./actions";
+import { useQuizContext } from "./contexts";
 
-const CreateQuestions = ({ quizData, setQuestionList, questionList }) => {
+const CreateQuestions = ({ id: quizId }) => {
   const { api } = useAxios();
+  const { state, dispatch } = useQuizContext();
+
+  const quizData = state?.quizzes?.find((quiz) => quiz.id === quizId);
+  const { Questions, id: quizSetId, title, description } = quizData;
 
   const [questionInfo, setQuestionInfo] = useState({
     question: "",
@@ -18,7 +22,18 @@ const CreateQuestions = ({ quizData, setQuestionList, questionList }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { Questions, id: quizSetId, title, description } = quizData;
+  const editQuestion = state?.editQuestion;
+  useEffect(() => {
+    if (editQuestion) {
+      const { question, options, correctAnswer } = editQuestion;
+      setQuestionInfo((prev) => ({
+        ...prev,
+        question: question,
+        correctAnswer: correctAnswer,
+        options: options,
+      }));
+    }
+  }, [editQuestion]);
 
   // Handle input changes for question title
   const handleQuestionChange = (e) => {
@@ -65,33 +80,77 @@ const CreateQuestions = ({ quizData, setQuestionList, questionList }) => {
     setLoading(true);
     setError("");
 
-    try {
-      const response = await api.post(
-        `${
-          import.meta.env.VITE_SERVER_BASE_URL
-        }/admin/quizzes/${quizSetId}/questions`,
-        questionInfo
-      );
+    if (editQuestion) {
+      const { id: questionId } = editQuestion;
+      // http://localhost:5000/api/admin/questions/:questionId
+      try {
+        const response = await api.patch(
+          `${
+            import.meta.env.VITE_SERVER_BASE_URL
+          }/admin/questions/${questionId}`,
+          questionInfo
+        );
 
-      if (response.data?.status === "success") {
-        const newQuestion = response.data?.data;
-        setQuestionInfo({
-          question: "",
-          options: ["", "", "", ""],
-          correctAnswer: "",
-        });
+        if (response.data?.status === "success") {
+          const newQuestion = response.data?.data;
+          setQuestionInfo({
+            question: "",
+            options: ["", "", "", ""],
+            correctAnswer: "",
+          });
 
-        setQuestionList((prev) => [...prev, newQuestion]);
-        ToastMessage({ type: "success", message: "New Question create Success!" }); 
- 
-      } else {
-        setError("Failed to save the question. Please try again.");
+          dispatch({
+            type: Actions.UPDATE_QUESTION,
+            payload: { quizId, newQuestion },
+          });
+          ToastMessage({
+            type: "success",
+            message: "Successfully updated!",
+          });
+        } else {
+          setError("Failed to save the question. Please try again.");
+        }
+      } catch (error) {
+        console.error(error);
+        setError("An error occurred while saving the question.");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      setError("An error occurred while saving the question.");
-    } finally {
-      setLoading(false);
+    } else {
+      try {
+        const response = await api.post(
+          `${
+            import.meta.env.VITE_SERVER_BASE_URL
+          }/admin/quizzes/${quizSetId}/questions`,
+          questionInfo
+        );
+
+        if (response.data?.status === "success") {
+          const newQuestion = response.data?.data;
+          setQuestionInfo({
+            question: "",
+            options: ["", "", "", ""],
+            correctAnswer: "",
+          });
+
+          // setQuestionList((prev) => [...prev, newQuestion]);
+          dispatch({
+            type: Actions.ADD_QUESTION,
+            payload: { quizId, newQuestion },
+          });
+          ToastMessage({
+            type: "success",
+            message: "New Question create Success!",
+          });
+        } else {
+          setError("Failed to save the question. Please try again.");
+        }
+      } catch (error) {
+        console.error(error);
+        setError("An error occurred while saving the question.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -100,7 +159,7 @@ const CreateQuestions = ({ quizData, setQuestionList, questionList }) => {
       <h2 className="text-3xl font-bold mb-4">{title}</h2>
 
       <div className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded-full inline-block mb-4">
-        Total number of questions : {questionList?.length}
+        Total number of questions : {Questions?.length}
       </div>
       <p className="text-gray-600 mb-4">{description}</p>
       <div className="space-y-4">

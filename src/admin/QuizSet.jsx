@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import CreateQuestions from "./CreateQuestions";
 import QuestionsList from "./QuestionsList";
@@ -8,25 +7,8 @@ const QuizSet = () => {
   // Extract state from location
   const location = useLocation();
   const { state } = location;
+  const quizSetID = state?.quizSetId;
 
-  const quizData = state?.result; 
-  const {
-    Questions,
-    createdAt,
-    description,
-    id: quizSetId,
-    status,
-    thumbnail,
-    title,
-    updatedAt,
-    userId,
-  } = quizData;
-
-  const [questionList, setQuestionList] = useState(Questions);
-
-  if (!quizData) {
-    return <p>No quiz data found. Please create a quiz first.</p>;
-  }
   //   console.log(questionList);
   const handleClickEdit = (id) => {
     // console.log(id);
@@ -64,18 +46,10 @@ const QuizSet = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 md:gap-8 lg:gap-12">
           {/* Left Column */}
-          <CreateQuestions
-            quizData={quizData}
-            setQuestionList={setQuestionList}
-            questionList={questionList}
-          />
+          <CreateQuestions id={quizSetID} />
 
           {/* <!-- Right Column --> */}
-          <QuestionsList
-            questionList={questionList}
-            setQuestionList={setQuestionList}
-            onClick={handleClickEdit}
-          />
+          <QuestionsList id={quizSetID} />
         </div>
       </div>
     </main>

@@ -1,5 +1,5 @@
+import avatar from "../assets/avater.webp";
 import logo from "../assets/logo-white.svg";
-import avatar from '../assets/avater.webp'
 const Aside = () => {
   return (
     <aside className="w-64 bg-primary p-6 flex flex-col">

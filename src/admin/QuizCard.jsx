@@ -2,44 +2,110 @@
 /* eslint-disable react/prop-types */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ToastMessage from "../components/ToastMessage";
+import useAxios from "../hooks/useAxios";
+import { Actions } from "./actions";
+import { useQuizContext } from "./contexts";
 
-const QuizCard = ({
-  quizSet,
-  handleClick,
-  handleDeleteQuiz,
-  handleEditQuiz,
-  handleQuizDraft,
-  handleQuizPublished,
-}) => {
+const QuizCard = ({ quizSet }) => {
   const {
     Questions,
-    createdAt,
     description,
     id: quizSetId,
     status,
     thumbnail,
     title,
-    updatedAt,
-    userId,
   } = quizSet;
+  const { api } = useAxios();
+  const navigate = useNavigate();
+  const { dispatch } = useQuizContext();
 
   const [isPublish, setIsPublish] = useState(status);
 
-  const handleDraft = (quizSetId) => {
-    handleQuizDraft(quizSetId);
-    setIsPublish("draft");
+  //go to question page
+  const handleClick = (quizSetId) => {
+    navigate("create-quiz/create-questions", { state: { quizSetId } });
   };
-  const handlePublish = (quizSetId) => {
-    handleQuizPublished(quizSetId);
-    setIsPublish("published");
+
+  //quiz set delete
+  const handleDeleteQuiz = async (e, quizId) => {
+    e.stopPropagation();
+
+    try {
+      const response = await api.delete(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizId}`
+      );
+      if (response.data?.status === "success") {
+        // console.log(response.data?.status);
+        dispatch({
+          type: Actions.DELETE_QUIZ,
+          payload: quizId,
+        });
+        ToastMessage({ type: "success", message: "Quiz Delete done!" });
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
+
+  //quiz set edit
+  const handleEditQuiz = (quizId) => {
+    navigate("create-quiz", { state: { quizSet } });
+  };
+
+  //quiz set draft
+  const handleQuizDraft = async (quizSetId) => {
+    const updatePublishQuize = {
+      ...quizSet,
+      status: "draft",
+    };
+
+    try {
+      const response = await api.patch(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizSetId}`,
+        updatePublishQuize
+      );
+      if (response.data?.status === "success") {
+        ToastMessage({ type: "success", message: "Quiz draft" });
+        setIsPublish("draft");
+      }
+    } catch (error) {
+      console.log(error);
+      ToastMessage({ type: "error", message: error.response?.data?.message });
+    }
+  };
+
+  //quiz set publish
+  const handleQuizPublished = async (quizSetId) => {
+    const updatePublishQuize = {
+      ...quizSet,
+      status: "published",
+    };
+
+    try {
+      const response = await api.patch(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${quizSetId}`,
+        updatePublishQuize
+      );
+
+      if (response.data?.status === "success") {
+        setIsPublish("published");
+        ToastMessage({ type: "success", message: "Quiz Published done!" });
+      }
+    } catch (error) {
+      console.log(error);
+      ToastMessage({ type: "error", message: error.response?.data?.message });
+    }
+  };
+
   return (
     <div
       key={quizSetId}
       className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 group"
     >
       <div
-        onClick={() => handleClick(quizSet)}
+        onClick={() => handleClick(quizSetId)}
         className="border-2 group-hover:scale-105 transition-all p-4 cursor-pointer"
       >
         <div className="text-buzzr-purple mb-4   ">
@@ -74,6 +140,7 @@ const QuizCard = ({
         <p>Total Questions: {Questions?.length}</p>
       </div>
 
+      {/* button */}
       <div className="flex justify-between bg-primary/10 px-6 py-2 mt-4">
         <button
           onClick={(e) => handleDeleteQuiz(e, quizSetId)}
@@ -89,17 +156,18 @@ const QuizCard = ({
         </button>
       </div>
 
+      {/* draft or publish */}
       <div className="flex justify-center space-x-4 bg-primary/10 px-6 py-2 mt-4">
         {isPublish === "published" ? (
           <button
-            onClick={() => handleDraft(quizSetId)}
+            onClick={() => handleQuizDraft(quizSetId)}
             className="text-primary hover:text-primary/80 font-medium text-center"
           >
             Move to Draft?
           </button>
         ) : (
           <button
-            onClick={() => handlePublish(quizSetId)}
+            onClick={() => handleQuizPublished(quizSetId)}
             className="text-red-600 hover:text-red-800 font-medium text-center"
           >
             Publish this Quiz?

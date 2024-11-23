@@ -1,19 +1,26 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ToastMessage from "../components/ToastMessage";
 import useAxios from "../hooks/useAxios";
+import { Actions } from "./actions";
+import { useQuizContext } from "./contexts";
 
 const CreateNewQuiz = () => {
+  const { state, dispatch } = useQuizContext();
+  const { quizzes, loading, error, editQuiz, editQuestion } = state || {};
+
   const { api } = useAxios();
+
   const location = useLocation();
-  const updateQuizList = location.state?.updateQuizList;
+  const updateQuizSet = location.state?.quizSet;
 
   const navigate = useNavigate();
 
   const [quizSet, setQuizSet] = useState({
-    title: updateQuizList?.title || "",
-    description: updateQuizList?.description || "",
-    flag: updateQuizList?.id || null,
+    title: updateQuizSet?.title || "",
+    description: updateQuizSet?.description || "",
+    flag: updateQuizSet?.id || null,
   });
 
   const handleChange = (e) => {
@@ -29,9 +36,9 @@ const CreateNewQuiz = () => {
     e.preventDefault();
 
     // Update the quiz
-    if (updateQuizList?.id === flag) {
+    if (updateQuizSet?.id === flag) {
       const updateQuiz = {
-        ...updateQuizList,
+        ...updateQuizSet,
         title,
         description,
       };
@@ -39,14 +46,21 @@ const CreateNewQuiz = () => {
       try {
         const response = await api.patch(
           `${import.meta.env.VITE_SERVER_BASE_URL}/admin/quizzes/${
-            updateQuizList?.id
+            updateQuizSet?.id
           }`,
           updateQuiz
         );
 
         if (response.status === 200 || response.status === 201) {
           navigate("/admin/dashboard");
-
+          dispatch({
+            type: Actions.UPDATE_QUIZ,
+            payload: {
+              title: updateQuiz?.title,
+              description: updateQuiz?.description,
+              id: updateQuizSet?.id,
+            },
+          });
           ToastMessage({ type: "success", message: "Quiz Edit done!" });
         }
       } catch (error) {
@@ -69,6 +83,8 @@ const CreateNewQuiz = () => {
         if (response.status === 201) {
           const result = response?.data?.data;
           navigate("create-questions", { state: { result } });
+          dispatch({ type: Actions.ADD_QUIZ, payload: result });
+          // console.log(result);
         }
       } catch (error) {
         console.error("Error creating quiz:", error);
@@ -149,7 +165,7 @@ const CreateNewQuiz = () => {
               type="submit"
               className="w-full block text-center bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
-              Next
+              {updateQuizSet ? "Edit Quiz" : "Next"}
             </button>
           </form>
         </div>
